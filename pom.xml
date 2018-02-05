@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.wildfly.docker</groupId>
-    <artifactId>Multicast</artifactId>
+    <artifactId>wildfly-cluster-on-docker</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <properties>
         <dockerfile-maven-version>1.0-SNAPSHOT</dockerfile-maven-version>
-        <war-final-name>${project.artifactId}</war-final-name>
+        <war-final-name>wildfly</war-final-name>
     </properties>
 
     <dependencies>

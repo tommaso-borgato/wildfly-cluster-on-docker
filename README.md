@@ -11,7 +11,7 @@ this application uses replicated HTTP session (`<distributable/>` tag in src/mai
 # Build docker image with wildfly+war
 Build a Docker image containig war running inside wildfly configured to run in clustered mode (`-server-config=standalone-ha.xml`)
 ```
-docker build -t wildfly-sample-dockerfile .
+docker build -t wildfly-cluster-node .
 ```
 
 # Create a dedicated Docker network
@@ -33,13 +33,13 @@ http://localhost:9000/#/dashboard
 Run 2 containers.  
 Note that specific IPs are only needed to configure a mod_jk balancer later.
 ```
-docker run --network=cluster_nw --ip 172.19.0.2 -p 8081:8080 -p 9991:9990 --name wildfly-sample-dockerfile-1 -t wildfly-sample-dockerfile  
-docker run --network=cluster_nw --ip 172.19.0.3 -p 8082:8080 -p 9992:9990 --name wildfly-sample-dockerfile-2 -t wildfly-sample-dockerfile
+docker run --network=cluster_nw --ip 172.19.0.2 -d -p 8081:8080 -p 9991:9990 --name wildfly-cluster-node-1 -t wildfly-cluster-node  
+docker run --network=cluster_nw --ip 172.19.0.3 -d -p 8082:8080 -p 9992:9990 --name wildfly-cluster-node-2 -t wildfly-cluster-node
 ```
 
 # Check clustering is working
-http://localhost:8081/Multicast/helloworld  
-http://localhost:8082/Multicast/helloworld
+http://localhost:8081/wildfly/helloworld  
+http://localhost:8082/wildfly/helloworld
 
 # Inspect a Docker container
 ```
@@ -62,6 +62,7 @@ then run
 ```
 docker run --network=cluster_nw --ip 172.19.0.4 -d -p 80:80 --name httpd-mod_jk -t httpd-mod_jk
 ```
-finally try url http://localhost/Multicast/helloworld  
+finally try url http://localhost/wildfly/helloworld for cluster
+try url http://localhost/jkstatus fot jk console  
 
     
