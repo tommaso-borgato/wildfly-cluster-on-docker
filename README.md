@@ -52,6 +52,15 @@ docker exec -it 24d9244eb9f0 bash
 docker container stop 8b64379c60e4  
 docker container rm 8b64379c60e4
 ```
-    
-    
+
+# Load Balancer with mod_jk
+go to src/mod_jk folder
+```
+docker build -t httpd-mod_jk .
+```
+then run
+```
+docker run --network=cluster_nw --ip 172.19.0.4 -d -p 80:80 --name httpd-mod_jk -t httpd-mod_jk
+```
+finally try url `http://localhost/Multicast/helloworld`
     
