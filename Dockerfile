@@ -1,5 +1,9 @@
-# Sample Dockerfile for use with the Docker file mode
+# ========================================
+# DOCKERFILE FOR WILDFLY (WORKER NODE)
+# ========================================
 FROM jboss/wildfly
+
+MAINTAINER tborgato@redhat.com
 
 #ARG WAR_FINAL_NAME
 ADD target/*.war /opt/jboss/wildfly/standalone/deployments/
@@ -25,10 +29,9 @@ EOF\n'\
 >> /tmp/jboss.sh"
 
 # START WILDFLY
+# CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0", "-server-config=standalone-ha.xml"]
 RUN /bin/bash -c "echo \"/opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 -server-config=standalone-ha.xml\" >> /tmp/jboss.sh"
 
 RUN /bin/bash -c "chmod +x /tmp/jboss.sh"
 
 CMD "/tmp/jboss.sh"
-#, "-Djboss.bind.address.private=0.0.0.0"
-#CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0", "-server-config=standalone-ha.xml"]

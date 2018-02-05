@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.InetAddress;
 
 /**
  * Servlet that stores attribute SESSION_ATTRIBUTE_KEY into HTTP session; HTTP session is replicated across wildfly cluster nodes;
@@ -23,7 +24,9 @@ public class HelloWorldServlet extends HttpServlet {
         HttpSession session = req.getSession(true);
         Integer serial = (Integer) session.getAttribute(SESSION_ATTRIBUTE_KEY);
         if (serial==null){serial=0;}
-        resp.getWriter().append("Counter: " + serial + "").flush();
+        resp.getWriter().append(
+                String.format("Counter: %d [host: %s]", serial, InetAddress.getLocalHost().getHostAddress())
+        ).flush();
         session.setAttribute(SESSION_ATTRIBUTE_KEY, serial + 1);
         resp.setHeader("Content-Type", "plain/text");
     }

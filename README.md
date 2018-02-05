@@ -6,7 +6,7 @@ Build war file to have something to deploy on wildfly:
 ```
 mvn clean install
 ```
-thsi application uses replicated HTTP session (`<distributable/>` tag in src/main/webapp/WEB-INF/web.xml).
+this application uses replicated HTTP session (`<distributable/>` tag in src/main/webapp/WEB-INF/web.xml).
 
 # Build docker image with wildfly+war
 Build a Docker image containig war running inside wildfly configured to run in clustered mode (`-server-config=standalone-ha.xml`)
