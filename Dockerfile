@@ -5,7 +5,12 @@ FROM jboss/wildfly
 
 MAINTAINER tborgato@redhat.com
 
-#ARG WAR_FINAL_NAME
+#
+USER root
+RUN yum -y install net-tools
+USER jboss
+
+# DEPLOY WAR
 ADD target/*.war /opt/jboss/wildfly/standalone/deployments/
 
 RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent

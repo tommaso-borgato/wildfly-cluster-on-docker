@@ -1,0 +1,71 @@
+# ========================================
+# DOCKERFILE FOR WILDFLY (WORKER NODE)
+# ========================================
+FROM jboss/wildfly
+
+MAINTAINER tborgato@redhat.com
+
+#
+USER root
+RUN yum -y install net-tools
+USER jboss
+
+# DEPLOY WAR
+ADD target/*.war /opt/jboss/wildfly/standalone/deployments/
+
+RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent
+
+# ========================================
+# CREATE LAUNCH SCRIPT
+# ========================================
+RUN /bin/bash -c "echo '#!/bin/bash' > /tmp/jboss.sh"
+# HOSTNAME
+RUN /bin/bash -c "echo 'HOSTNAME=\$(hostname -i)' >> /tmp/jboss.sh"
+RUN /bin/bash -c "echo 'echo \"HOSTNAME=\$HOSTNAME\"' >> /tmp/jboss.sh"
+# MODIFY standalone-ha.xml
+RUN /bin/bash -c "echo $'/opt/jboss/wildfly/bin/jboss-cli.sh <<EOF \n\
+embed-server --std-out=echo --server-config=standalone-ha.xml \n\
+/interface=multicast:add(inet-address=\$HOSTNAME) \n\
+/socket-binding-group=standard-sockets/socket-binding=jgroups-mping:write-attribute(name=interface, value=multicast) \n\
+/socket-binding-group=standard-sockets/socket-binding=jgroups-tcp:write-attribute(name=interface, value=multicast) \n\
+/socket-binding-group=standard-sockets/socket-binding=jgroups-udp:write-attribute(name=interface, value=multicast) \n\
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mod_cluster-proxy:add(host=172.19.0.5,port=6666) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=advertise,value=false) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:undefine-attribute(name=advertise-socket) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=proxies,value=[mod_cluster-proxy]) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session,value=true) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-remove,value=false) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-force,value=false) \n\
+/subsystem=modcluster/mod-cluster-config=configuration/dynamic-load-provider=configuration:remove() \n\
+/subsystem=undertow:write-attribute(name=instance-id,value=NODE-\$HOSTNAME) \n\
+quit \n\
+EOF\n'\
+>> /tmp/jboss.sh"
+
+# ADD SOCKET IN WILDFLY-MOD_CLUSTER TOWARDS HTTPD-MOD_CLUSTER
+# <outbound-socket-binding name="mod_cluster-proxy">
+#   <remote-destination host="gen-vm003.mw.lab.eng.bos.redhat.com" port="6666"/>
+# </outbound-socket-binding>
+
+# CHANGE SETTINGS FOR WILDFLY-MOD_CLUSTER:
+# <subsystem xmlns="urn:jboss:domain:modcluster:3.0">
+#   <mod-cluster-config advertise-socket="modcluster" connector="ajp">
+#     <dynamic-load-provider>
+#       <load-metric type="cpu"/>
+#     </dynamic-load-provider>
+#   </mod-cluster-config>
+# </subsystem>
+# TO:
+# <subsystem xmlns="urn:jboss:domain:modcluster:3.0">
+#   <mod-cluster-config advertise="false" proxies="mod_cluster-proxy" connector="ajp" sticky-session="true" sticky-session-remove="false" sticky-session-force="false">
+#     <simple-load-provider factor="1"/>
+#   </mod-cluster-config>
+# </subsystem>
+
+# START WILDFLY
+# CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0", "-server-config=standalone-ha.xml"]
+RUN /bin/bash -c "echo \"/opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 -server-config=standalone-ha.xml\" >> /tmp/jboss.sh"
+
+RUN /bin/bash -c "chmod +x /tmp/jboss.sh"
+
+CMD "/tmp/jboss.sh"

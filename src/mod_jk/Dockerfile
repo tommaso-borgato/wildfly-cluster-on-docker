@@ -1,5 +1,7 @@
 FROM centos:7
 
+MAINTAINER tborgato@redhat.com
+
 RUN yum -y update && yum clean all
 RUN yum -y install httpd httpd-devel gcc* make && yum clean all
 

@@ -60,15 +60,23 @@
                 <version>1.3.7</version>
                 <executions>
                     <execution>
-                        <id>default</id>
+                        <id>wildfly-node</id>
                         <goals>
                             <goal>build</goal>
                         </goals>
                         <configuration>
-
                             <buildArgs>
                                 <WAR_FINAL_NAME>${project.build.finalName}.${project.packaging}</WAR_FINAL_NAME>
                             </buildArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>mod_jk</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <dockerConfigFile>./src/mod_jk/</dockerConfigFile>
                         </configuration>
                     </execution>
                 </executions>
