@@ -38,6 +38,7 @@ embed-server --std-out=echo --server-config=standalone-ha.xml \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-force,value=false) \n\
 /subsystem=modcluster/mod-cluster-config=configuration/dynamic-load-provider=configuration:remove() \n\
 /subsystem=undertow:write-attribute(name=instance-id,value=NODE-\$HOSTNAME) \n\
+/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=load-balancing-group,value=GROUP1) \n\
 quit \n\
 EOF\n'\
 >> /tmp/jboss.sh"
