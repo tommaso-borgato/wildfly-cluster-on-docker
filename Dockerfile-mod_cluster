@@ -21,7 +21,9 @@ RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent
 RUN /bin/bash -c "echo '#!/bin/bash' > /tmp/jboss.sh"
 # IPADDRESS
 RUN /bin/bash -c "echo 'IPADDRESS=\$(hostname -i)' >> /tmp/jboss.sh"
-RUN /bin/bash -c "echo 'echo \"IP ADDRESS = \$IPADDRESS\"' >> /tmp/jboss.sh"
+RUN /bin/bash -c "echo 'echo \"IPADDRESS = \$IPADDRESS\"' >> /tmp/jboss.sh"
+RUN /bin/bash -c "echo 'HOSTNAME=\$(hostname)' >> /tmp/jboss.sh"
+RUN /bin/bash -c "echo 'echo \"HOSTNAME = \$HOSTNAME\"' >> /tmp/jboss.sh"
 # MODIFY standalone-ha.xml
 RUN /bin/bash -c "echo $'/opt/jboss/wildfly/bin/jboss-cli.sh <<EOF \n\
 embed-server --std-out=echo --server-config=standalone-ha.xml \n\
@@ -39,7 +41,7 @@ embed-server --std-out=echo --server-config=standalone-ha.xml \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session,value=true) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-remove,value=false) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-force,value=false) \n\
-/system-property=jboss.host.name:add(value=HOST-\$IPADDRESS) \n\
+/system-property=jboss.host.name:add(value=\$HOSTNAME) \n\
 quit \n\
 EOF\n'\
 >> /tmp/jboss.sh"

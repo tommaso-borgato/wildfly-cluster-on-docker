@@ -38,6 +38,9 @@ LoadModule manager_module modules/mod_manager.so
 LoadModule advertise_module modules/mod_advertise.so
 MemManagerFile ${HTTPD_MC_BUILD_DIR}/cache/mod_cluster
 
+ProxyPass / balancer://MyBalancer stickysession=JSESSIONID|jsessionidnofailover=on failonstatus=203,204
+ProxyPassReverse / balancer://MyBalancerProxyPreserveHost on
+
 # Adjust to you hostname and subnet.
 <IfModule manager_module>
     Listen ${IPADDRESS}:6666
