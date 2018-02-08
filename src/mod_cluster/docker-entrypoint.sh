@@ -4,7 +4,7 @@ set -e
 if [ "$1" = 'start' ]; then
 
   #get the current ip addr of the continer
-  HOSTNAME=$(hostname -i)
+  IPADDRESS=$(hostname -i)
   CONTAINER_IP_ADDR=$(/sbin/ip route|awk '/default/ { print $3 }')
 	MODCLUSTER_PORT=${MODCLUSTER_PORT:-6666}
 	MODCLUSTER_ADVERTISE=${MODCLUSTER_ADVERTISE:-On}
@@ -15,7 +15,7 @@ if [ "$1" = 'start' ]; then
 	echo
 	echo "Starting httpd with mod_cluster"
 	echo "==============================="
-	echo "HOSTNAME                   ${HOSTNAME}"
+	echo "IPADDRESS                  ${IPADDRESS}"
 	echo "CONTAINER_IP_ADDR          ${CONTAINER_IP_ADDR}"
 	echo "MODCLUSTER_PORT            ${MODCLUSTER_PORT}"
 	echo "MODCLUSTER_ADVERTISE       ${MODCLUSTER_ADVERTISE}"
@@ -38,29 +38,31 @@ LoadModule manager_module modules/mod_manager.so
 LoadModule advertise_module modules/mod_advertise.so
 MemManagerFile ${HTTPD_MC_BUILD_DIR}/cache/mod_cluster
 
-Listen ${HOSTNAME}:6666
-
-<VirtualHost ${HOSTNAME}:6666>
-    ErrorLog logs/mod_cluster_error.log
-    CustomLog logs/mod_cluster.log common
+# Adjust to you hostname and subnet.
+<IfModule manager_module>
+    Listen ${IPADDRESS}:6666
     LogLevel debug
 
-    <Directory />
-      Require ip 172.
-    </Directory>
+    <VirtualHost ${IPADDRESS}:6666>
+        ErrorLog logs/mod_cluster_error.log
+        CustomLog logs/mod_cluster.log common
 
-    KeepAliveTimeout 60
-    ManagerBalancerName mycluster
-    ServerAdvertise On
-    EnableMCPMReceive On
+        <Directory />
+          Require ip 172.
+        </Directory>
 
-    <Location /mcm>
-      SetHandler mod_cluster-manager
-      Require ip 172.
-    </Location>
+        KeepAliveTimeout 60
+        ManagerBalancerName mycluster
+        ServerAdvertise On
+        EnableMCPMReceive On
 
-</VirtualHost>
+        <Location /mcm>
+          SetHandler mod_cluster-manager
+          Require ip 172.
+        </Location>
 
+    </VirtualHost>
+</IfModule>
 EOT
 
     cat ${MOD_CLUSTER_CONF_PATH}

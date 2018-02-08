@@ -19,29 +19,34 @@ RUN /opt/jboss/wildfly/bin/add-user.sh admin admin --silent
 # CREATE LAUNCH SCRIPT
 # ========================================
 RUN /bin/bash -c "echo '#!/bin/bash' > /tmp/jboss.sh"
-# HOSTNAME
-RUN /bin/bash -c "echo 'HOSTNAME=\$(hostname -i)' >> /tmp/jboss.sh"
-RUN /bin/bash -c "echo 'echo \"HOSTNAME=\$HOSTNAME\"' >> /tmp/jboss.sh"
+# IPADDRESS
+RUN /bin/bash -c "echo 'IPADDRESS=\$(hostname -i)' >> /tmp/jboss.sh"
+RUN /bin/bash -c "echo 'echo \"IP ADDRESS = \$IPADDRESS\"' >> /tmp/jboss.sh"
 # MODIFY standalone-ha.xml
 RUN /bin/bash -c "echo $'/opt/jboss/wildfly/bin/jboss-cli.sh <<EOF \n\
 embed-server --std-out=echo --server-config=standalone-ha.xml \n\
-/interface=multicast:add(inet-address=\$HOSTNAME) \n\
+/interface=multicast:add(inet-address=\$IPADDRESS) \n\
 /socket-binding-group=standard-sockets/socket-binding=jgroups-mping:write-attribute(name=interface, value=multicast) \n\
 /socket-binding-group=standard-sockets/socket-binding=jgroups-tcp:write-attribute(name=interface, value=multicast) \n\
 /socket-binding-group=standard-sockets/socket-binding=jgroups-udp:write-attribute(name=interface, value=multicast) \n\
 /socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mod_cluster-proxy:add(host=172.19.0.5,port=6666) \n\
+/interface=management:write-attribute(name=inet-address,value=\\\${jboss.bind.address.management:\$IPADDRESS}) \n\
+/interface=public:write-attribute(name=inet-address,value=\\\${jboss.bind.address.public:\$IPADDRESS}) \n\
+/interface=unsecure:write-attribute(name=inet-address,value=\\\${jboss.bind.address.unsecure:\$IPADDRESS}) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=advertise,value=false) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:undefine-attribute(name=advertise-socket) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=proxies,value=[mod_cluster-proxy]) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session,value=true) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-remove,value=false) \n\
 /subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=sticky-session-force,value=false) \n\
-/subsystem=modcluster/mod-cluster-config=configuration/dynamic-load-provider=configuration:remove() \n\
-/subsystem=undertow:write-attribute(name=instance-id,value=NODE-\$HOSTNAME) \n\
-/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=load-balancing-group,value=GROUP1) \n\
+/system-property=jboss.host.name:add(value=HOST-\$IPADDRESS) \n\
 quit \n\
 EOF\n'\
 >> /tmp/jboss.sh"
+
+#/subsystem=modcluster/mod-cluster-config=configuration/dynamic-load-provider=configuration:remove() \n\
+#/subsystem=undertow:write-attribute(name=instance-id,value=NODE-\$IPADDRESS) \n\
+#/subsystem=modcluster/mod-cluster-config=configuration:write-attribute(name=load-balancing-group,value=GROUP1) \n\
 
 # ADD SOCKET IN WILDFLY-MOD_CLUSTER TOWARDS HTTPD-MOD_CLUSTER
 # <outbound-socket-binding name="mod_cluster-proxy">
